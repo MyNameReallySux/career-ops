@@ -107,6 +107,7 @@ const (
 	ColPay                         // PAY range
 	ColHasReport                   // RPT: ✓/—
 	ColHasPDF                      // PDF: ✓/—
+	ColHasCoverLetter              // CLR: ✓/—
 	ColLastContact                 // LAST contact date
 )
 
@@ -125,6 +126,7 @@ var optionalCols = []colDef{
 	{ColPay, "PAY", "", 16, true},
 	{ColHasReport, "RPT", "✓/—", 4, false},
 	{ColHasPDF, "PDF", "✓/—", 4, false},
+	{ColHasCoverLetter, "CLR", "✓/—", 4, false},
 	{ColLastContact, "LAST", "", 10, false},
 }
 
@@ -995,7 +997,7 @@ func (m PipelineModel) renderBody() string {
 type colWidths struct {
 	num, score, company, status, role int
 	// optional columns — 0 means the column is hidden
-	date, loc, pay, rpt, pdf, last int
+	date, loc, pay, rpt, pdf, clr, last int
 }
 
 func (m PipelineModel) colVisible(id ColumnID) bool {
@@ -1028,10 +1030,13 @@ func (m PipelineModel) columnWidths() colWidths {
 	if m.colVisible(ColHasPDF) {
 		c.pdf = 4
 	}
+	if m.colVisible(ColHasCoverLetter) {
+		c.clr = 4
+	}
 	if m.colVisible(ColLastContact) {
 		c.last = 10
 	}
-	fixed := c.num + c.score + c.date + c.company + c.status + c.loc + c.pay + c.rpt + c.pdf + c.last
+	fixed := c.num + c.score + c.date + c.company + c.status + c.loc + c.pay + c.rpt + c.pdf + c.clr + c.last
 	c.role = m.width - fixed - 14 // separators + outer padding
 	if c.role < 15 {
 		c.role = 15
@@ -1129,6 +1134,9 @@ func (m PipelineModel) renderColumnHeader() string {
 	if cw.pdf > 0 {
 		segments = append(segments, cell("PDF", cw.pdf))
 	}
+	if cw.clr > 0 {
+		segments = append(segments, cell("CLR", cw.clr))
+	}
 	if cw.last > 0 {
 		segments = append(segments, cell("LAST", cw.last))
 	}
@@ -1195,6 +1203,9 @@ func (m PipelineModel) renderAppLine(app model.CareerApplication, selected bool)
 	}
 	if cw.pdf > 0 {
 		segments = append(segments, m.renderCheckCell(app.HasPDF, cw.pdf))
+	}
+	if cw.clr > 0 {
+		segments = append(segments, m.renderCheckCell(app.HasCoverLetter, cw.clr))
 	}
 	if cw.last > 0 {
 		lastText := "—"

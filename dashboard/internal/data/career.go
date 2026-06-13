@@ -190,7 +190,39 @@ func ParseApplications(careerOpsPath string) []model.CareerApplication {
 	// Strategy 5: company name fallback from batch-input.tsv
 	enrichAppURLsByCompany(careerOpsPath, apps)
 
+	// Mark apps that have a cover letter PDF in output/.
+	enrichCoverLetterFlags(careerOpsPath, apps)
+
 	return apps
+}
+
+// enrichCoverLetterFlags sets HasCoverLetter=true on apps whose company slug
+// matches an output/*-cover.pdf file. The glob runs once; matching is by slug
+// substring so minor name differences don't cause misses.
+func enrichCoverLetterFlags(careerOpsPath string, apps []model.CareerApplication) {
+	matches, err := filepath.Glob(filepath.Join(careerOpsPath, "output", "*-cover.pdf"))
+	if err != nil || len(matches) == 0 {
+		return
+	}
+
+	reName := regexp.MustCompile(`[^a-z0-9]+`)
+	slug := func(s string) string {
+		return reName.ReplaceAllString(strings.ToLower(s), "-")
+	}
+
+	for i, app := range apps {
+		if app.Company == "" {
+			continue
+		}
+		compSlug := slug(app.Company)
+		for _, path := range matches {
+			base := strings.ToLower(filepath.Base(path))
+			if strings.Contains(base, compSlug) {
+				apps[i].HasCoverLetter = true
+				break
+			}
+		}
+	}
 }
 
 // loadBatchInputURLs reads batch-input.tsv and returns a map of batch ID -> job URL.

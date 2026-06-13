@@ -9,7 +9,8 @@ type CareerApplication struct {
 	Status       string
 	Score        float64
 	ScoreRaw     string
-	HasPDF       bool
+	HasPDF          bool
+	HasCoverLetter  bool
 	ReportPath   string
 	ReportNumber string
 	Notes        string
